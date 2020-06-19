@@ -36,6 +36,8 @@ def getStockList():
 def main():
   pid = str(os.getpid())
   hostname = platform.node()[3:-13] #works on aws linux
+  startSessionTime = datetime.datetime.now()
+
   print ("STARTING " + pid + " on " + hostname)
   fixLogPath = "/tmp/"
   fixLogFileName = "fix.log"
@@ -51,7 +53,7 @@ def main():
   # engineDelay = 0
   # execDelay = 0
 
-  fixLogFile = fixLogPath + fixLogFileName
+  fixLogFile = fixLogPath + fixLogFileName + "." + startSessionTime.strftime(getTimeFormat())
   try:
     fh = open(fixLogFile, "w")
   except:
@@ -60,7 +62,7 @@ def main():
 
   fh.write("HEADER\n")
 
-  secList = ["AMZN", "GOOG", "IBM", "XOM"]
+  stock = ["AMZN", "GOOG", "IBM", "XOM"]
   stock = getStockList()
 
   clientmsgseq = 0
@@ -74,7 +76,7 @@ def main():
 
   msgCount = 0
   totalBytes = 0
-  startSessionTime = datetime.datetime.now()
+  
 
   for sec in stock:
   #for sec in secList:
