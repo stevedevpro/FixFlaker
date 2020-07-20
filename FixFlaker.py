@@ -21,6 +21,7 @@ class FixSession:
     self.execid = 0
     self.msgCount = 0
     self.totalBytes = 0
+    self.session = pid + "@" + hostname
     self.clienttarget = "CLIENT_" + pid + "_" + hostname
     self.brokertarget = "BROKER_" + pid + "_" + hostname
     self.fixversion = "8=FIX4.4"
@@ -31,15 +32,17 @@ class FixSession:
     self.engineDelay = .001
     self.execDelay = .005
     #10x msg rate
-    self.engineDelay = .0001
-    self.execDelay = .00025
+    #self.engineDelay = .0001
+    #self.execDelay = .00025
     #max msg rate
     #self.engineDelay = 0
     #self.execDelay = 0
 
 def getTimeFormat():
   #example: 20200619-16:27:15.276270
-  return "%Y%m%d-%H:%M:%S.%f"
+  #return "%Y%m%d-%H:%M:%S.%f"
+  #example: 20200619-16:27:15.276270
+  return "%Y-%m-%dT%H:%M:%S.%f"
 
 def getTimeStampString():
   return datetime.datetime.now().strftime(getTimeFormat())
@@ -51,8 +54,8 @@ def getStockList():
   for stockline in stockfile.splitlines():
     stk = stockline[0:stockline.find(",")]
     if stk != "Symbol":
-      print(stk)
       stocks.append(stk)
+      print(stk)
 
   stocklen = len(stocks)
   print (str(stocklen) + " stocks loaded.")
@@ -104,7 +107,7 @@ def genFix(fixs, sec, fh):
 
   logtime = getTimeStampString() #with microseconds
 
-  fh.write(logtime + " " + clientOrderMsg + "\n")
+  fh.write(logtime[:-3] + " " + fixs.session + " " + clientOrderMsg + "\n")
   fixs.msgCount += 1
   fixs.totalBytes += len(logtime + " " + clientOrderMsg + "\n")
 
@@ -153,8 +156,7 @@ def genFix(fixs, sec, fh):
   brokerMsg = brokerMsg + fix10
 
   logtime = getTimeStampString() #with microseconds
-  #print(logtime + " " + brokerMsg + "\n")
-  fh.write(logtime + " " + brokerMsg + "\n")
+  fh.write(logtime[:-3] + " " + fixs.session + " " + brokerMsg + "\n")
   fixs.msgCount += 1
   fixs.totalBytes += len(logtime + " " + brokerMsg + "\n")
 
@@ -181,31 +183,37 @@ def main():
     print("problem opening file for writing. EXITING!")
     sys.exit()
 
-  fh.write("HEADER\n")
+  #fh.write("HEADER\n")
 
-  #sequential mode
+  ####sequential mode####
   # for sec in stocks:
   #   genFix(fixs, sec, fh)
 
-  #duration mode
-  maxstock = len(stocks)
-  
-  sessionFinish = startSessionTime + datetime.timedelta(hours=0, minutes=2)
+  ####duration mode####
+  sessionFinish = startSessionTime + datetime.timedelta(hours=0, minutes=10)
   while datetime.datetime.now() <= sessionFinish:
     stock = random.choice(stocks)
     genFix(fixs, stock, fh)
+
+  ####counter mode####
+  # maxtxn = 3
+  # txncount = 1
+  # while txncount <= maxtxn:
+  #   stock = random.choice(stocks)
+  #   genFix(fixs, stock, fh)
+  #   txncount+=1
 
   endSessionTime = datetime.datetime.now()
   sessionRunTime = endSessionTime - startSessionTime
   sessionSeconds = sessionRunTime.total_seconds()
   trailer = "ENDOFFILE StartTime:" + startSessionTime.strftime(getTimeFormat()) + \
-    " EndTime:" + endSessionTime.strftime(getTimeFormat()) + \
-      " TotalMsgs:" + str(fixs.msgCount) + \
-        " Total Seconds:" + str(sessionSeconds) + \
-          " Msgs/Sec:" + str(fixs.msgCount / sessionSeconds) + \
-            " Total Bytes:" + str(fixs.totalBytes) + \
-              " Average Message Size:" + str(fixs.totalBytes / fixs.msgCount)
-  fh.write(trailer)
+    "\nEndTime:" + endSessionTime.strftime(getTimeFormat()) + \
+      "\nTotalMsgs:" + str(fixs.msgCount) + \
+        "\nTotal Seconds:" + str(sessionSeconds) + \
+          "\nMsgs/Sec:" + str(fixs.msgCount / sessionSeconds) + \
+            "\nTotal Bytes:" + str(fixs.totalBytes) + \
+              "\nAverage Message Size:" + str(fixs.totalBytes / fixs.msgCount)
+  #fh.write(trailer)
   print(trailer)
   fh.close()
   print("DONE")
