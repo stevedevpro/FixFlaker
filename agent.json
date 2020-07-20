@@ -1,0 +1,26 @@
+{
+  "assumeRoleExternalId": "arn:aws:iam::253375139526:role/delegate_kinesis",
+  "cloudwatch.emitMetrics": false,
+  "kinesis.endpoint": "kinesis.us-east-1.amazonaws.com",
+  "firehose.endpoint": "firehose.us-east-1.amazonaws.com",
+  
+  "flows": [
+    {
+      "filePattern": "/tmp/fix.log.*",
+      "kinesisStream": "datastream01",
+      "partitionKeyOption": "RANDOM",
+      "maxBufferAgeMillis": "1000",
+      "dataProcessingOptions": [
+                {
+                    "optionName": "CSVTOJSON",
+                    "customFieldNames": [ "timestamp", "session", "rawFix" ],
+                    "delimiter": " "
+                }
+            ]
+    },
+    {
+      "filePattern": "/tmp/fix.log.__*",
+      "deliveryStream": "firehose01xx"
+    }
+  ]
+}
