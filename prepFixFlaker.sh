@@ -34,4 +34,5 @@ if test -f "/root/FixFlaker.py"; then
 	mv /root/FixFlaker.py /root/FixFlaker.py.`date +"%Y-%m-%dT%H:%M:%S.%3N"`
 fi
 curl https://raw.githubusercontent.com/stevedevpro/FixFlaker/master/FixFlaker.py > /root/FixFlaker.py
+python3 /root/FixFlaker.py
 echo "done"
