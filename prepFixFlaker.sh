@@ -7,16 +7,14 @@ if test -f "/etc/aws-kinesis/agent.json"; then
 	mv /etc/aws-kinesis/agent.json /etc/aws-kinesis/agent.json.`date +"%Y-%m-%dT%H:%M:%S.%3N"`
 fi
 echo '{
-  "assumeRoleExternalId": "arn:aws:iam::253375139526:role/delegate_kinesis",
+  "assumeRoleExternalId": "arn:aws:iam::764544309252:role/FirehoseDelegatedProducerRole",
   "cloudwatch.emitMetrics": false,
-  "kinesis.endpoint": "kinesis.us-east-1.amazonaws.com",
-  "firehose.endpoint": "firehose.us-east-1.amazonaws.com",
+  "firehose.endpoint": "vpce-016eb6779e59f5bfb-i2axohwi.firehose.us-east-1.vpce.amazonaws.com",
   
   "flows": [
     {
       "filePattern": "/tmp/fix.log.*",
-      "kinesisStream": "datastream01",
-      "partitionKeyOption": "RANDOM",
+      "deliveryStream": "mfm_kfh_collect_fixlog",
       "maxBufferAgeMillis": "1000",
       "dataProcessingOptions": [
                 {
@@ -25,10 +23,6 @@ echo '{
                     "delimiter": " "
                 }
             ]
-    },
-    {
-      "filePattern": "/tmp/fix.log.__*",
-      "deliveryStream": "firehose01xx"
     }
   ]
 }' > /etc/aws-kinesis/agent.json
@@ -36,3 +30,8 @@ echo '{
 service aws-kinesis-agent start
 chkconfig aws-kinesis-agent on
 
+if test -f "/root/FixFlaker.py"; then
+	mv /root/FixFlaker.py /root/FixFlaker.py.`date +"%Y-%m-%dT%H:%M:%S.%3N"`
+fi
+curl https://raw.githubusercontent.com/stevedevpro/FixFlaker/master/FixFlaker.py > /root/FixFlaker.py
+echo "done"
