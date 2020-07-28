@@ -3,7 +3,7 @@
  * by Steve Cooper
  */
 
-CREATE OR REPLACE STREAM "DESTINATION_SQL_STREAM" (
+CREATE OR REPLACE STREAM "DEST_FIX_PARSE" (
   "MessageType" VARCHAR(32),
   "Symbol" VARCHAR(32),
   "Quantity" int,
@@ -17,7 +17,7 @@ CREATE OR REPLACE STREAM "DESTINATION_SQL_STREAM" (
 );
 
 -- Create pump to insert into output 
-CREATE OR REPLACE PUMP "STREAM_PUMP" AS INSERT INTO "DESTINATION_SQL_STREAM"
+CREATE OR REPLACE PUMP "STREAM_PUMP" AS INSERT INTO "DEST_FIX_PARSE"
 
 -- Select all columns from source stream
 SELECT STREAM
@@ -67,7 +67,7 @@ FROM (
   SUM("Quantity") OVER W1 AS "TotalGrossQuantity",
   SUM("Notional") OVER W1 AS "TotalGrossNotional",
   COUNT("Side") OVER W1 AS "TotalGrossOrderCount"
-  FROM "DESTINATION_SQL_STREAM"
+  FROM "DEST_FIX_PARSE"
   WHERE "MessageType" = 'NewOrderSingle'
   WINDOW W1 AS (
     PARTITION BY "Symbol"
