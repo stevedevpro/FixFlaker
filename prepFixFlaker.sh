@@ -1,16 +1,13 @@
-#!/usr/bin/bash
-
-yum update -y
-yum install -y python3
-yum install –y https://s3.amazonaws.com/streaming-data-agent/aws-kinesis-agent-latest.amzn1.noarch.rpm
+#!/bin/bash
+yum update --assumeyes
+yum install --assumeyes python3
+yum install --assumeyes https://s3.amazonaws.com/streaming-data-agent/aws-kinesis-agent-latest.amzn1.noarch.rpm
 if test -f "/etc/aws-kinesis/agent.json"; then
 	mv /etc/aws-kinesis/agent.json /etc/aws-kinesis/agent.json.`date +"%Y-%m-%dT%H:%M:%S.%3N"`
 fi
 echo '{
   "assumeRoleExternalId": "arn:aws:iam::764544309252:role/FirehoseDelegatedProducerRole",
-  "cloudwatch.emitMetrics": false,
-  "firehose.endpoint": "vpce-016eb6779e59f5bfb-i2axohwi.firehose.us-east-1.vpce.amazonaws.com",
-  
+  "cloudwatch.emitMetrics": false
   "flows": [
     {
       "filePattern": "/tmp/fix.log.*",
@@ -19,7 +16,7 @@ echo '{
       "dataProcessingOptions": [
                 {
                     "optionName": "CSVTOJSON",
-                    "customFieldNames": [ "timestamp", "rawFix" ],
+                    "customFieldNames": [ "fixlog_timestamp", "fixlog_session", "fixlog_message" ],
                     "delimiter": " "
                 }
             ]
