@@ -1,3 +1,8 @@
+/**
+ * mfm_kda_event.sql
+ * by Steve Cooper
+ */
+
 CREATE OR REPLACE STREAM "DESTINATION_SQL_STREAM" (
   "MessageType" VARCHAR(32),
   "Symbol" VARCHAR(32),
@@ -6,8 +11,9 @@ CREATE OR REPLACE STREAM "DESTINATION_SQL_STREAM" (
   "Notional" decimal(18,2),
   "Side" VARCHAR(32),
   "SideSign" int,
-  "FIXMessage"  VARCHAR(512),
-  "LogTimeStamp"  VARCHAR(32)
+  "fixlog_session" VARCHAR(512),
+  "fixlog_message"  VARCHAR(512),
+  "fixlog_timestamp"  VARCHAR(32)
 );
 
 -- Create pump to insert into output 
@@ -16,27 +22,28 @@ CREATE OR REPLACE PUMP "STREAM_PUMP" AS INSERT INTO "DESTINATION_SQL_STREAM"
 -- Select all columns from source stream
 SELECT STREAM
   CASE
-    WHEN SUBSTRING("rawFix" FROM '\|35=([0-9A-Za-z])\|') = '|35=D|' THEN 'NewOrderSingle'
-    WHEN SUBSTRING("rawFix" FROM '\|35=([0-9A-Za-z])\|') = '|35=8|' THEN 'Execution'
+    WHEN SUBSTRING("fixlog_message" FROM '\|35=([0-9A-Za-z])\|') = '|35=D|' THEN 'NewOrderSingle'
+    WHEN SUBSTRING("fixlog_message" FROM '\|35=([0-9A-Za-z])\|') = '|35=8|' THEN 'Execution'
     ELSE 'Other'
   END AS "MessageType",
-  TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("rawFix" FROM '\|55=([A-Z\.]+)\|') FROM 5)) as "Symbol",
-  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("rawFix" FROM '\|38=([0-9]+)\|') FROM 5)) as int) as "Quantity",
---  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("rawFix" FROM '\|44=([0-9]+\.[0-9]+)\|') FROM 5)) as decimal) as "Price",
-  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("rawFix" FROM '\|44=([0-9]*\.*[0-9]*)\|') FROM 5)) as decimal(18,2)) as "Price",
-  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("rawFix" FROM '\|44=([0-9]*\.*[0-9]*)\|') FROM 5)) as decimal(18,2)) * CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("rawFix" FROM '\|38=([0-9]+)\|') FROM 5)) as int) as "Notional",
+  TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|55=([A-Z\.]+)\|') FROM 5)) as "Symbol",
+  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|38=([0-9]+)\|') FROM 5)) as int) as "Quantity",
+--  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|44=([0-9]+\.[0-9]+)\|') FROM 5)) as decimal) as "Price",
+  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|44=([0-9]*\.*[0-9]*)\|') FROM 5)) as decimal(18,2)) as "Price",
+  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|44=([0-9]*\.*[0-9]*)\|') FROM 5)) as decimal(18,2)) * CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|38=([0-9]+)\|') FROM 5)) as int) as "Notional",
   CASE
-    WHEN SUBSTRING("rawFix" FROM '\|54=([0-9A-Z])\|') = '|54=1|' THEN 'Buy'
-    WHEN SUBSTRING("rawFix" FROM '\|54=([0-9A-Z])\|') = '|54=2|' THEN 'Sell'
+    WHEN SUBSTRING("fixlog_message" FROM '\|54=([0-9A-Z])\|') = '|54=1|' THEN 'Buy'
+    WHEN SUBSTRING("fixlog_message" FROM '\|54=([0-9A-Z])\|') = '|54=2|' THEN 'Sell'
     ELSE 'Other'
   END AS "Side",
   CASE
-    WHEN SUBSTRING("rawFix" FROM '\|54=([0-9A-Z])\|') = '|54=1|' THEN 1
-    WHEN SUBSTRING("rawFix" FROM '\|54=([0-9A-Z])\|') = '|54=2|' THEN -1
+    WHEN SUBSTRING("fixlog_message" FROM '\|54=([0-9A-Z])\|') = '|54=1|' THEN 1
+    WHEN SUBSTRING("fixlog_message" FROM '\|54=([0-9A-Z])\|') = '|54=2|' THEN -1
     ELSE NULL
   END AS "SideSign",
-  "rawFix" as "FIXMessage",
-  "COL_timestamp" AS "LogTimeStamp"
+  "fixlog_session" as "fixlog_session",
+  "fixlog_message" as "fixlog_message",
+  "fixlog_timestamp" AS "fixlog_timestamp"
 FROM "SOURCE_SQL_STREAM_001"
 ;
 
