@@ -11,9 +11,10 @@ import datetime
 import time
 import random
 import urllib.request
+import argparse
 
 class FixSession:
-  def __init__(self, pid, hostname):
+  def __init__(self, pid, hostname, rejectrate):
     self.clientmsgseq = 0
     self.brokermsgseq = 0
     self.clordid = 0
@@ -26,6 +27,8 @@ class FixSession:
     self.brokertarget = "BROKER_" + pid + "_" + hostname
     self.fixversion = "8=FIX4.4"
     self.fixDelimeter = "|"
+
+    self.rejectrate = rejectrate
     
     #MESSAGE RATES
     #current state msg rate
@@ -139,6 +142,16 @@ def genFix(fixs, sec, fh):
     fix151 + fix14 + fix32 + fix6 + fix31 + \
     fix38 + fix40 + fix44 + fix54 + fix55 + fix59 + brfix58 + brfix60 
 
+  if random.randint(0, 100) < fixs.rejectrate:
+    brfix35 = "35=j" + fixDelimeter #msgtype
+    brfix45 = "45=" + str(fixs.clientmsgseq) + fixDelimeter #refseqnum
+    brfix372 = "372=D" + fixDelimeter #refmsgtype
+
+    brfix380 = "380=0" + fixDelimeter #businessrejectreason
+    brfix58 = "58=Other Reason" + fixDelimeter #text
+    
+    brokerBody = brfix45 + brfix372 + brfix380 + brfix58
+
   #broker admin layer
   fixs.brokermsgseq += 1
   brfix34 = "34=" + str(fixs.brokermsgseq) + fixDelimeter #msg seq
@@ -161,14 +174,26 @@ def genFix(fixs, sec, fh):
   fixs.totalBytes += len(logtime + " " + brokerMsg + "\n")
 
 def main():
+  
+  parser = argparse.ArgumentParser(description='Generate fake FIX messages.')
+  parser.add_argument("-f", "--fang", help="use FANG stocks only [otherwise S&P 500]", action="store_true")
+  parser.add_argument("-r", "--reject", help="specify percent of orders to be randomly rejected (0-100)[0]", type=int, default=0)
+  parser.add_argument("-m", "--minutes", help="specify how many minutes to run [10]", type=int, default=10)
+  args = parser.parse_args()
+
   print("Running...")
   pid = str(os.getpid())
   hostname = platform.node()[3:-13] #works on aws linux
 
-  stocks = ["AMZN", "GOOG", "IBM", "XOM"]
-  stocks = getStockList()
-
-  fixs = FixSession(pid, hostname)
+  if args.fang:
+    #amazon, alphabet, netflix, facebook
+    stocks = ["AMZN", "GOOG", "NFLX", "F"]
+  else:
+    stocks = getStockList()
+  
+  sessionlen = args.minutes
+  
+  fixs = FixSession(pid, hostname, args.reject)
 
   startSessionTime = datetime.datetime.now()
 
@@ -190,7 +215,7 @@ def main():
   #   genFix(fixs, sec, fh)
 
   ####duration mode####
-  sessionFinish = startSessionTime + datetime.timedelta(hours=0, minutes=10)
+  sessionFinish = startSessionTime + datetime.timedelta(minutes=sessionlen)
   while datetime.datetime.now() <= sessionFinish:
     stock = random.choice(stocks)
     genFix(fixs, stock, fh)
