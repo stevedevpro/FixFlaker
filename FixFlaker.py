@@ -150,7 +150,8 @@ def genFix(fixs, sec, fh):
     brfix380 = "380=0" + fixDelimeter #businessrejectreason
     brfix58 = "58=Other Reason" + fixDelimeter #text
     
-    brokerBody = brfix45 + brfix372 + brfix380 + brfix58
+    brokerBody = fix37 + fix41 + fix38 + fix40 + fix44 + fix54 + fix55 + fix59 + \
+      brfix45 + brfix372 + brfix380 + brfix58 + brfix60
 
   #broker admin layer
   fixs.brokermsgseq += 1
