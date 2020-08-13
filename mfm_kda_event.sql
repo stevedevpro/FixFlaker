@@ -6,6 +6,7 @@
 CREATE OR REPLACE STREAM "DEST_FIX" (
   "MessageType" VARCHAR(32),
   "Symbol" VARCHAR(32),
+  "Text" VARCHAR(32),
   "Quantity" int,
   "Price" decimal(18,2),
   "Notional" decimal(18,2),
@@ -24,9 +25,11 @@ SELECT STREAM
   CASE
     WHEN SUBSTRING("fixlog_message" FROM '\|35=([0-9A-Za-z])\|') = '|35=D|' THEN 'NewOrderSingle'
     WHEN SUBSTRING("fixlog_message" FROM '\|35=([0-9A-Za-z])\|') = '|35=8|' THEN 'Execution'
+    WHEN SUBSTRING("fixlog_message" FROM '\|35=([0-9A-Za-z])\|') = '|35=j|' THEN 'BusinessReject'
     ELSE 'Other'
   END AS "MessageType",
   TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|55=([A-Z\.]+)\|') FROM 5)) as "Symbol",
+  TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|58=([A-Za-z\.]+)\|') FROM 5)) as "Text",
   CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|38=([0-9]+)\|') FROM 5)) as int) as "Quantity",
 --  CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|44=([0-9]+\.[0-9]+)\|') FROM 5)) as decimal) as "Price",
   CAST(TRIM(TRAILING '|' FROM SUBSTRING(SUBSTRING("fixlog_message" FROM '\|44=([0-9]*\.*[0-9]*)\|') FROM 5)) as decimal(18,2)) as "Price",

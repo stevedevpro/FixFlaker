@@ -58,7 +58,7 @@ def getStockList():
     stk = stockline[0:stockline.find(",")]
     if stk != "Symbol":
       stocks.append(stk)
-      print(stk)
+      #print(stk)
 
   stocklen = len(stocks)
   print (str(stocklen) + " stocks loaded.")
@@ -148,7 +148,7 @@ def genFix(fixs, sec, fh):
     brfix372 = "372=D" + fixDelimeter #refmsgtype
 
     brfix380 = "380=0" + fixDelimeter #businessrejectreason
-    brfix58 = "58=Other Reason" + fixDelimeter #text
+    brfix58 = "58=BusinessReject" + fixDelimeter #text
     
     brokerBody = fix37 + fix41 + fix38 + fix40 + fix44 + fix54 + fix55 + fix59 + \
       brfix45 + brfix372 + brfix380 + brfix58 + brfix60
