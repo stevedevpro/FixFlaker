@@ -64,7 +64,7 @@ SELECT STREAM
   "TotalGrossQuantity",
   "TotalGrossNotional",
   "TotalGrossOrderCount"
-  , TIMESTAMP_TO_CHAR('yyyy-MM-dd''T''H:mm:ss.SSS', CURRENT_ROW_TIMESTAMP)
+  , TIMESTAMP_TO_CHAR('yyyy-MM-dd''T''HH:mm:ss.SSS', CURRENT_ROW_TIMESTAMP)
 FROM (
   SELECT STREAM "Symbol" AS "TotalGrossNotionalSymbol",
   SUM("Quantity") OVER W1 AS "TotalGrossQuantity",
