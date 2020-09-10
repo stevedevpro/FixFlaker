@@ -51,7 +51,8 @@ def getTimeStampString():
   return datetime.datetime.now().strftime(getTimeFormat())
 
 def getStockList():
-  response = urllib.request.urlopen("https://datahub.io/core/s-and-p-500-companies/r/constituents.csv")
+  #response = urllib.request.urlopen("https://datahub.io/core/s-and-p-500-companies/r/constituents.csv")
+  response = urllib.request.urlopen("d3fydv3nx8uhfl.cloudfront.net/sandp500-constituents.csv")
   stockfile = response.read().decode('utf-8')
   stocks = []
   for stockline in stockfile.splitlines():
